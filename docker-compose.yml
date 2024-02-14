@@ -26,8 +26,8 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydatabase
+      POSTGRES_PASSWORD: 1997
+      POSTGRES_DB: news-portal
 
   postgres:
     image: postgres
@@ -35,5 +35,5 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: mydatabase
+      POSTGRES_PASSWORD: 1997
+      POSTGRES_DB: news-portal
