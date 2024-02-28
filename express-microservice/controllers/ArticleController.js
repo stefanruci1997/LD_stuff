@@ -22,9 +22,9 @@ const ArticleController = {
 
     async createArticle(req, res) {
         try {
-            const {title, subTitle, content, categoryId, userId} = req.body;
+            const {title, sub_title, content, category_id, user_id} = req.body;
             const client = await pool.connect();
-            const result = await client.query('INSERT INTO articles (title, subTitle, content, categoryId, userId) VALUES ($1, $2, $3, $4, $5) RETURNING *', [title, subTitle, content, categoryId, userId]);
+            const result = await client.query('INSERT INTO articles (title, sub_title, content, category_id, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *', [title, sub_title, content, category_id, user_id]);
             const newArticle = result.rows[0];
             client.release();
             res.status(201).json(newArticle);
@@ -51,9 +51,9 @@ const ArticleController = {
     async updateArticle(req, res) {
         try {
             const {id} = req.params;
-            const {title, subTitle, content, categoryId, userId} = req.body;
+            const {title, sub_title: sub_title, content, category_id: category_id, user_id: user_id} = req.body;
             const client = await pool.connect();
-            const result = await client.query('UPDATE articles SET title = $1, subTitle = $2, content = $3, categoryId = $4, userId = $5 WHERE id = $6 RETURNING *', [title, subTitle, content, categoryId, userId, id]);
+            const result = await client.query('UPDATE articles SET title = $1, sub_title = $2, content = $3, category_id = $4, user_id = $5 WHERE id = $6 RETURNING *', [title, sub_title, content, category_id, user_id, id]);
             const updatedArticle = result.rows[0];
             client.release();
             res.json(updatedArticle);

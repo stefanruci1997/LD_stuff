@@ -14,7 +14,6 @@ app.use(bodyParser.json());
 // Database connection configuration
 const pool = db_pool;
 
-// Middleware to add database pool to request object
 app.use((req, res, next) => {
     req.pool = pool;
     next();
