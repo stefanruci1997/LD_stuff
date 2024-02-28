@@ -7,13 +7,13 @@ const sequelize = new Sequelize({
     port: 5432,        // Change this to your PostgreSQL port
     username: 'postgres', // Change this to your PostgreSQL username
     password: '1997', // Change this to your PostgreSQL password
-    database: 'news-portal' // Change this to your PostgreSQL database name
+    database: 'news_portal' // Change this to your PostgreSQL database name
 });
 
 const db_pool = new Pool({
     user: 'postgres',
     host: 'localhost',
-    database: 'news-portal',
+    database: 'news_portal',
     password: '1997',
     port: 5432,
 });
