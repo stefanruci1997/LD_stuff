@@ -10,21 +10,22 @@ services:
     ports:
       - "5432:5432"
     volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Mount the SQL script file into the container
       - postgres_data:/var/lib/postgresql/data
 
-  go-api:
-    build:
-      context: ./api_net-http
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1997
-      POSTGRES_DB: news-portal
-    ports:
-      - "8080:8080"
-    depends_on:
-      - postgres
+  # go-api:
+  #   build:
+  #     context: ./api_net-http
+  #   environment:
+  #     POSTGRES_HOST: postgres
+  #     POSTGRES_PORT: 5432
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: 1997
+  #     POSTGRES_DB: news-portal
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - postgres
 
   express-api:
     build:

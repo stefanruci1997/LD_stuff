@@ -1,5 +1,5 @@
 # Use Node.js version 14 as the base image
-FROM node:14
+FROM node:20
 
 # Set the working directory within the Docker container
 WORKDIR /usr/src/app
@@ -17,4 +17,4 @@ COPY . .
 EXPOSE 3000
 
 # Command to start the Express.js application
-CMD ["node", "index.js"]
+ENTRYPOINT ["node", "index.js"]

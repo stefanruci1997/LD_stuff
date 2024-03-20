@@ -1,81 +1,81 @@
-// controllers/RatingController.js
-const {Pool} = require('pg');
-const sequelize = require("../config/database");
-const db_pool = require("../config/database");
+const ArticleRating = require('../models/Rating');
 
-// Create a new Pool instance to connect to your PostgreSQL database
-const pool = db_pool;
-
-
-const RatingController = {
-    async getAllRatings(req, res) {
-        try {
-            const client = await pool.connect();
-            const result = await client.query('SELECT * FROM ratings');
-            const ratings = result.rows;
-            client.release();
-            res.json(ratings);
-        } catch (error) {
-            console.error('Error fetching ratings:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
-    },
-
-    async createRating(req, res) {
-        try {
-            const {articleId, userId, rating} = req.body;
-            const client = await pool.connect();
-            const result = await client.query('INSERT INTO ratings (articleId, userId, rating) VALUES ($1, $2, $3) RETURNING *', [articleId, userId, rating]);
-            const newRating = result.rows[0];
-            client.release();
-            res.status(201).json(newRating);
-        } catch (error) {
-            console.error('Error creating rating:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
-    },
-
-    async getRatingById(req, res) {
-        try {
-            const {id} = req.params;
-            const client = await pool.connect();
-            const result = await client.query('SELECT * FROM ratings WHERE id = $1', [id]);
-            const rating = result.rows[0];
-            client.release();
-            res.json(rating);
-        } catch (error) {
-            console.error('Error fetching rating:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
-    },
-
-    async updateRating(req, res) {
-        try {
-            const {id} = req.params;
-            const {articleId, userId, rating} = req.body;
-            const client = await pool.connect();
-            const result = await client.query('UPDATE ratings SET articleId = $1, userId = $2, rating = $3 WHERE id = $4 RETURNING *', [articleId, userId, rating, id]);
-            const updatedRating = result.rows[0];
-            client.release();
-            res.json(updatedRating);
-        } catch (error) {
-            console.error('Error updating rating:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
-    },
-
-    async deleteRating(req, res) {
-        try {
-            const {id} = req.params;
-            const client = await pool.connect();
-            await client.query('DELETE FROM ratings WHERE id = $1', [id]);
-            client.release();
-            res.json({message: 'Rating deleted successfully'});
-        } catch (error) {
-            console.error('Error deleting rating:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
+const createRating = async (articleId, userId, rating) => {
+    try {
+        const newRating = await ArticleRating.create({
+            articleId,
+            userId,
+            rating
+        });
+        return newRating;
+    } catch (error) {
+        console.error('Error creating rating:', error);
+        throw new Error('Internal Server Error');
     }
 };
 
-module.exports = RatingController;
+const getAllRatings = async () => {
+    try {
+        const ratings = await ArticleRating.findAll();
+        return ratings;
+    } catch (error) {
+        console.error('Error fetching ratings:', error);
+        throw new Error('Internal Server Error');
+    }
+};
+
+const getRatingById = async (id) => {
+    try {
+        const rating = await ArticleRating.findByPk(id);
+        if (rating) {
+            return rating;
+        } else {
+            throw new Error('Rating not found');
+        }
+    } catch (error) {
+        console.error('Error fetching rating:', error);
+        throw new Error('Internal Server Error');
+    }
+};
+
+const updateRating = async (id, articleId, userId, rating) => {
+    try {
+        const ratingInstance = await ArticleRating.findByPk(id);
+        if (ratingInstance) {
+            await ratingInstance.update({
+                articleId,
+                userId,
+                rating
+            });
+            return ratingInstance;
+        } else {
+            throw new Error('Rating not found');
+        }
+    } catch (error) {
+        console.error('Error updating rating:', error);
+        throw new Error('Internal Server Error');
+    }
+};
+
+const deleteRating = async (id) => {
+    try {
+        const rating = await ArticleRating.findByPk(id);
+        if (rating) {
+            await rating.destroy();
+            return { message: 'Rating deleted successfully' };
+        } else {
+            throw new Error('Rating not found');
+        }
+    } catch (error) {
+        console.error('Error deleting rating:', error);
+        throw new Error('Internal Server Error');
+    }
+};
+
+module.exports = {
+    createRating,
+    getAllRatings,
+    getRatingById,
+    updateRating,
+    deleteRating,
+};

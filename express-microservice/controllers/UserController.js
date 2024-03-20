@@ -1,59 +1,87 @@
-// controllers/UserController.js
-const axios = require('axios');
+const User = require('../models/User');
 
-const UserController = {
-    async getAllUsers(req, res) {
-        try {
-            const response = await axios.get('http://localhost:8080/users');
-            res.json(response.data);
-        } catch (error) {
-            console.error('Error fetching users:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    },
-
-    async createUser(req, res) {
-        try {
-            const response = await axios.post('http://localhost:8080/users', req.body);
-            res.status(201).json(response.data);
-        } catch (error) {
-            console.error('Error creating user:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    },
-
-    async getUserById(req, res) {
-        try {
-            const { id } = req.params;
-            const response = await axios.get(`http://localhost:8080/users/${id}`);
-            res.json(response.data);
-        } catch (error) {
-            console.error('Error fetching user:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    },
-
-    async updateUser(req, res) {
-        try {
-            const { id } = req.params;
-            const response = await axios.put(`http://localhost:8080/users/${id}`, req.body);
-            res.json(response.data);
-        } catch (error) {
-            console.error('Error updating user:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
-    },
-
-    async deleteUser(req, res) {
-        try {
-            const { id } = req.params;
-            const response = await axios.delete(`http://localhost:8080/users/${id}`);
-            res.json(response.data);
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        }
+const createUser = async (name, surname, username, password, email, userType) => {
+    try {
+        const newUser = await User.create({
+            name,
+            surname,
+            username,
+            password,
+            email,
+            user_type: userType // assuming 'userType' corresponds to 'user_type' in the database
+        });
+        return newUser;
+    } catch (error) {
+        console.error('Error creating user:', error);
+        throw new Error('Internal Server Error');
     }
 };
 
-module.exports = UserController;
+const getAllUsers = async () => {
+    try {
+        const users = await User.findAll();
+        return users;
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        throw new Error('Internal Server Error');
+    }
+};
+
+const getUserById = async (id) => {
+    try {
+        const user = await User.findByPk(id);
+        if (user) {
+            return user;
+        } else {
+            throw new Error('User not found');
+        }
+    } catch (error) {
+        console.error('Error fetching user:', error);
+        throw new Error('Internal Server Error');
+    }
+};
+
+const updateUser = async (id, name, surname, username, password, email, userType) => {
+    try {
+        const user = await User.findByPk(id);
+        if (user) {
+            await user.update({
+                name,
+                surname,
+                username,
+                password,
+                email,
+                user_type: userType // assuming 'userType' corresponds to 'user_type' in the database
+            });
+            return user;
+        } else {
+            throw new Error('User not found');
+        }
+    } catch (error) {
+        console.error('Error updating user:', error);
+        throw new Error('Internal Server Error');
+    }
+};
+
+const deleteUser = async (id) => {
+    try {
+        const user = await User.findByPk(id);
+        if (user) {
+            await user.destroy();
+            return { message: 'User deleted successfully' };
+        } else {
+            throw new Error('User not found');
+        }
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        throw new Error('Internal Server Error');
+    }
+};
+
+module.exports = {
+    createUser,
+    getAllUsers,
+    getUserById,
+    updateUser,
+    deleteUser,
+};

@@ -1,10 +1,23 @@
-// models/Category.js
-class Category {
-    constructor(categoryName) {
-        this.categoryName = categoryName;
-        this.createdAt = new Date();
-        this.deletedAt = null;
-    }
-}
+const { DataTypes, Model } = require('sequelize');
+const sequelize = require('../config/database');
 
-module.exports = Category;
+const Category=  sequelize.define("Category",{
+    category_id: {
+        type:DataTypes.INTEGER  ,
+        primaryKey : true ,
+        field: "id",
+        autoIncrement :true
+      },
+     category_name:{ 
+         type : DataTypes.STRING    
+       } ,
+       deleted_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      } 
+}
+, {
+  tableName: 'categories',
+  timestamps: false // If you want Sequelize to manage createdAt and updatedAt fields
+});
+module.exports= Category;

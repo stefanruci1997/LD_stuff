@@ -6,6 +6,7 @@ const ArticleController = require('../controllers/ArticleController');
 router.get('/', ArticleController.getAllArticles);
 router.post('/', ArticleController.createArticle);
 router.get('/:id', ArticleController.getArticleById);
+router.get('/cat/:category', ArticleController.getArticlesByCategory);
 router.put('/:id', ArticleController.updateArticle);
 router.delete('/:id', ArticleController.deleteArticle);
 

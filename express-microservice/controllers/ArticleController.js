@@ -1,80 +1,118 @@
-// controllers/ArticleController.js
-const {Pool} = require('pg');
-const sequelize = require("../config/database");
-const db_pool = require("../config/database");
+const Article = require("../models/Article");
+const Category = require('../models/Category');
 
-// Create a new Pool instance to connect to your PostgreSQL database
-const pool = db_pool;
 
-const ArticleController = {
-    async getAllArticles(req, res) {
-        try {
-            const client = await pool.connect();
-            const result = await client.query('SELECT * FROM articles');
-            const articles = result.rows;
-            client.release();
-            res.json(articles);
-        } catch (error) {
-            console.error('Error fetching articles:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
-    },
+const createArticle = async (req, res, next) => {
+  const { title, sub_title, content, category_id,user_id} = req.body;
 
-    async createArticle(req, res) {
-        try {
-            const {title, subTitle, content, categoryId, userId} = req.body;
-            const client = await pool.connect();
-            const result = await client.query('INSERT INTO articles (title, subTitle, content, categoryId, userId) VALUES ($1, $2, $3, $4, $5) RETURNING *', [title, subTitle, content, categoryId, userId]);
-            const newArticle = result.rows[0];
-            client.release();
-            res.status(201).json(newArticle);
-        } catch (error) {
-            console.error('Error creating article:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
-    },
-
-    async getArticleById(req, res) {
-        try {
-            const {id} = req.params;
-            const client = await pool.connect();
-            const result = await client.query('SELECT * FROM articles WHERE id = $1', [id]);
-            const article = result.rows[0];
-            client.release();
-            res.json(article);
-        } catch (error) {
-            console.error('Error fetching article:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
-    },
-
-    async updateArticle(req, res) {
-        try {
-            const {id} = req.params;
-            const {title, subTitle, content, categoryId, userId} = req.body;
-            const client = await pool.connect();
-            const result = await client.query('UPDATE articles SET title = $1, subTitle = $2, content = $3, categoryId = $4, userId = $5 WHERE id = $6 RETURNING *', [title, subTitle, content, categoryId, userId, id]);
-            const updatedArticle = result.rows[0];
-            client.release();
-            res.json(updatedArticle);
-        } catch (error) {
-            console.error('Error updating article:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
-    },
-
-    async deleteArticle(req, res) {
-        try {
-            const {id} = req.params;
-            const client = await pool.connect();
-            await client.query('DELETE FROM articles WHERE id = $1', [id]);
-            client.release();
-            res.json({message: 'Article deleted successfully'});
-        } catch (error) {
-            console.error('Error deleting article:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
-    }
+   Article.create({
+      title,
+      sub_title,
+      content,
+      category_id,
+      user_id
+    }).then(() => {
+      res.status(201).json({ message: 'Article created'});
+  })
+  .catch(err => {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
+  });
 };
 
-module.exports = ArticleController;
+const getAllArticles = async (req, res, next) => {
+  Article.findAll()
+  .then(articles => {
+      res.status(200).json({ articles: articles });
+  })
+  .catch(err => console.log(err));
+};
+
+const getArticleById = async (req, res, next) => {
+  Article.findByPk(req.params.id)
+  .then(article => {
+      if (!article) {
+          return res.status(404).json({ message: 'Article not found' });
+      }
+      res.status(200).json({ article: article });
+  })
+  .catch(err => {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
+  });
+};
+
+const getArticlesByCategory = async (req, res, next) => {
+ 
+  const  categoryName = req.params.category
+  try {
+    // Find the category
+    const category = await Category.findOne({ where: { category_name: categoryName } });
+
+    // Check if category exists
+    if (!category) {
+      return res.status(404).json({ message: 'No such category exists.' });
+    }
+
+    // Find articles associated with the category
+    const articles = await Article.findAll({ where: { category_id: category.id } });
+
+    // Return response with articles and category details
+    return res.status(200).json({ articles, category: category.toJSON() });
+  } catch (error) {
+    console.log('Error in getting the category', error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
+
+const updateArticle = async (req, res, next) => {
+ 
+    const article = await Article.findByPk(id);
+    if (article) {
+   article.update({
+        title,
+        sub_title: subTitle,
+        content,
+        category_id: categoryId
+      }).then ((updatedArticle)=>{
+          return res.status(201).json(updatedArticle);
+      })
+    .catch((err)=> {
+        console.log("ERROR IN UPDATING ARTICLE", err);  
+         return res.status(500).send("Server error");
+     });
+    } else{
+       return res.status(404).json({message:"The specified article does not exist."});
+    } 
+    
+ 
+};
+
+const deleteArticle = async (req, res, next) => {
+  try {
+    const article = await Article.findByPk(id);
+    if (article) {
+      await article.destroy();
+      return res.status(200).json({ message: 'Deleted successfully' });
+    } else {
+      return res.status(404).json({ message: 'Not found.' });
+    }
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ message: "Internal server error" });  
+  }
+  
+};
+
+module.exports = {
+
+  createArticle,
+  getAllArticles,
+  getArticleById,
+  updateArticle,
+  deleteArticle,
+  getArticlesByCategory,
+  
+};

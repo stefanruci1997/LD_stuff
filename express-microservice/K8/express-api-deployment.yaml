@@ -1,0 +1,44 @@
+# express-api-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: express-api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: express-api
+  template:
+    metadata:
+      labels:
+        app: express-api
+    spec:
+      containers:
+        - name: express-api
+          image: <your-express-api-image>
+          ports:
+            - containerPort: 3000
+          env:
+            - name: POSTGRES_HOST
+              value: postgres-service
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              value: 1997
+            - name: POSTGRES_DB
+              value: news-portal
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: express-api-service
+spec:
+  selector:
+    app: express-api
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP

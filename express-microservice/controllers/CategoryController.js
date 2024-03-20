@@ -1,80 +1,83 @@
-// controllers/CategoryController.js
-const {Pool} = require('pg');
-const sequelize = require("../config/database");
-const db_pool = require("../config/database");
+const Category = require('../models/Category');
 
-// Create a new Pool instance to connect to your PostgreSQL database
-const pool = db_pool;
+const createCategory = async (req, res) => {
+        const { categoryName } = req.body;
+   Category.create({ categoryName })
+   .then(() => {
+        res.status(201).json({ message: 'Category created'});
+    })
+    .catch(err => {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+    });
+       
+};
 
-const CategoryController = {
-    async getAllCategories(req, res) {
-        try {
-            const client = await pool.connect();
-            const result = await client.query('SELECT * FROM categories');
-            const categories = result.rows;
-            client.release();
-            res.json(categories);
-        } catch (error) {
-            console.error('Error fetching categories:', error);
-            res.status(500).json({error: 'Internal Server Error'});
+const getAllCategories = async (req, res) => {
+    Category.findAll()
+      .then((categories) => {
+          if (!categories) {    
+              return res.status(404).json({ type: 'not found', message: 'No categories were found.' }); 
+          }
+          res.status(200).json(categories);
+      })
+      .catch((err) => {
+          console.error(err);
+          res.status(500).json({ error: 'Error retrieving the list of categories' });
+      });
+        
+};
+
+const getCategoryById = async (req, res) => {
+        const { id } = req.params;
+       Category.findByPk(id)    
+           .then((category) => {
+               if(!category){return res.status(404).json({type:'not found', message: `The category with the id ${id} was not found.`})}
+res.status  (200).json(category);           
+           })
+           .catch ((err)=> {
+               console.log(err);
+               res.status(404).json ({message:'The specified resource could not be found.'})
+           })
+}
+
+
+async function updateCategory(req, res) {
+    try {
+        const { id } = req.params;
+        const { categoryName } = req.body;
+        const category = await Category.findByPk(id);
+        if (category) {
+            await category.update({ categoryName });
+            res.status(200).send(await Category.build({ categoryName }).validate    ());
+        } else {
+            res.status(404).json({ message: "Category not found"});
+        }   
+    } catch (e) {
+        res.status(400).json({ message: e.message });
+    }  
+}
+
+const deleteCategory = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const category = await Category.findByPk(id);
+        if (category) {
+            await category.destroy();
+            res.json({ message: 'Category deleted successfully' });
+        } else {
+            res.status(404).json({ error: 'Category not found' });
         }
-    },
-
-    async createCategory(req, res) {
-        try {
-            const {categoryName} = req.body;
-            const client = await pool.connect();
-            const result = await client.query('INSERT INTO categories (categoryName) VALUES ($1) RETURNING *', [categoryName]);
-            const newCategory = result.rows[0];
-            client.release();
-            res.status(201).json(newCategory);
-        } catch (error) {
-            console.error('Error creating category:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
-    },
-
-    async getCategoryById(req, res) {
-        try {
-            const {id} = req.params;
-            const client = await pool.connect();
-            const result = await client.query('SELECT * FROM categories WHERE id = $1', [id]);
-            const category = result.rows[0];
-            client.release();
-            res.json(category);
-        } catch (error) {
-            console.error('Error fetching category:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
-    },
-
-    async updateCategory(req, res) {
-        try {
-            const {id} = req.params;
-            const {categoryName} = req.body;
-            const client = await pool.connect();
-            const result = await client.query('UPDATE categories SET categoryName = $1 WHERE id = $2 RETURNING *', [categoryName, id]);
-            const updatedCategory = result.rows[0];
-            client.release();
-            res.json(updatedCategory);
-        } catch (error) {
-            console.error('Error updating category:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
-    },
-
-    async deleteCategory(req, res) {
-        try {
-            const {id} = req.params;
-            const client = await pool.connect();
-            await client.query('DELETE FROM categories WHERE id = $1', [id]);
-            client.release();
-            res.json({message: 'Category deleted successfully'});
-        } catch (error) {
-            console.error('Error deleting category:', error);
-            res.status(500).json({error: 'Internal Server Error'});
-        }
+    } catch (error) {
+        console.error('Error deleting category:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 };
 
-module.exports = CategoryController;
+module.exports = {
+    createCategory,
+    getAllCategories,
+    getCategoryById,
+    updateCategory,
+    deleteCategory,
+};
